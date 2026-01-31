@@ -1,6 +1,8 @@
 function [v_l] = vert_diam_to_s(v_diam, N)
-%VERT_DIAM_TO_S Summary of this function goes here
-%   Detailed explanation goes here
+%VERT_DIAM_TO_S converts a convatenated version of a vector to a list in s
+%   The concatenation of substructure specific vectors are identified by 
+%   the diamond, this function take the single vectors from the concatenat.
+%   and place it in the corresponding position of the substructure.
 arguments (Input)
     v_diam
     N    

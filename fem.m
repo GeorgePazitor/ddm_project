@@ -1,7 +1,7 @@
 clear all 
 clc
 
-%% Finite element code for 1D bar with linear displacement interpolation
+%% Finite element method for 1D bar with linear displacement interpolation
 
 L = 100;   % in mm
 S = 10;    % mm^2
@@ -9,7 +9,7 @@ Fd = 10;   % force in newton
 E = 2e5;   % young's module in MPa
 
 % for the finite element method
-n = 4;    % IMPORTANT n = number of elements for FEM -> n+1 nodes
+n = 4;    % n = number of elements -> n+1 nodes
 
 x = linspace(0, L, 1000); %define a discretized domain for x
 
@@ -30,15 +30,15 @@ F(n+1) = Fd;       % external force applied to the last node
 
 x = 0:100/n:100;   % redefine x domain: 
 
-node = [1:n        % matrix of n column vectors, each of which has the 
-        2:n+1];    % corresponds to an element an its constitutive nodes  
+node = [1:n        % matrix of n column vectors, each of which 
+        2:n+1];    % corresponds to an element and its nodes  
                    % es: first elem is [ 1 2 ]^T of node 1 and 2
 
 K = zeros(n+1);    % initialize the global stiffness matrix
 
 for e=1:n          % for each element 
-
-    le = x(node(2, e)) - x(node(1,e))    % element lenght x2-x1
+    e
+    le = x(node(2, e)) - x(node(1,e));    % element lenght x2-x1
     ke = E*S/le * (eye(2) - flip(eye(2)))% local stiffness matrix
     % assemble the global stiffness matrix with local contribution of ke
     K(node(1, e), node(1,e)) =  K(node(1, e), node(1,e)) + ke(1,1);
@@ -51,7 +51,7 @@ K
 
 u_1 = 0; % boundary conditions
 
-% linear system resolutive method 1 from notes of TP1
+% to solve the linear system -> remoove dof where ud = 0 
 F_1 = F(2:n+1);        
 K_1 = K(2:n+1, 2:n+1); % elimination of first row/first column
 

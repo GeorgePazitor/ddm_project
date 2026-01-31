@@ -15,90 +15,25 @@ h = 5;     % h = lenght of an element inside a single substructure (must be a di
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
 
-%% build discretized trace operator and assebly operators A and A bar 
-% build A diamond
-A_l = cell(1,N);        
-for s=1:N
-    %for the first and the last substruct it's just a vector A(s) 
-    % has 1 column (1 single interaction per substructure)
-    if s == 1 || s == N   
-        A_l{s} = zeros(N-1, 1); 
-    %for the first and the last substruct it's just a vector A(s) has 2 col
-    else                 
-        A_l{s} = zeros(N-1, 2);
-    end
-end
+%% build discretized trace operator and assebly operators A and A bar
 
-for c=1:(N-1)
-    if c == 1
-        A_l{c}(c, 1) = 1;
-        A_l{c+1}(c, 1) = 1; 
-    else
-        A_l{c}(c, 2) = 1; 
-        A_l{c+1}(c, 1) = 1; 
-    end
-    
-end
+% TODO build discretized trace operator
 
-A_diam = cat(2, A_l{:});
+A_diam = A_op(N);
 
-% build A bar diamond
-Ab_l = cell(1,N);
-for s=1:N
-    if s == 1 || s == N
-        Ab_l{s} = zeros(N-1, 1); 
-    else
-        Ab_l{s} = zeros(N-1, 2);
-    end
-end
-
-for c=1:(N-1)
-    if c == 1
-        Ab_l{c}(c, 1) = 1;
-        Ab_l{c+1}(c, 1) = -1; 
-    else
-        Ab_l{c}(c, 2) = 1; 
-        Ab_l{c+1}(c, 1) = -1; 
-    end
-    
-end
-
-Ab_diam = cat(2, Ab_l{:}); % 2: horizontal concatenation
+Ab_diam = A_bar_op(N);
 
 %% FEM for each substructure
-%F = zeros(n+1, 1); % initialisation of the shape of the force vector
-%F(n+1) = Fd;       % external force applied to the last node 
 
 node = [1:n        % matrix of n column vectors, each of which has the 
         2:n+1];    % corresponds to an element an its constitutive nodes  
+%% Generate internal and interface node lists for each substructure
+[i_list, b_list] = node_lists(N,n); 
 
-i_list = cell(1,N); %internal nodes 
-b_list = cell(1,N); %interface nodes
-
-%generation of internal and interface node lists
-for s=1:N % for each substructure
-    for e=1:n+1          % for each node in substructure
-        if e == 1
-            if s == 1 % first node of first substructure is internal 
-                i_list{s} = [i_list{s} e];
-            else
-                b_list{s} = [b_list{s} e]; %otherwise it's interface
-            end
-        elseif e == n+1
-            if s == N % last node of first substructure is internal 
-                i_list{s} = [i_list{s} e];
-            else
-                b_list{s} = [b_list{s} e]; %otherwise it's interface
-            end
-        else
-            i_list{s} = [i_list{s} e]; %otherwise it's an internal node
-        end
-    end 
-end
-
+%% Generate list containing the global stiffness matrices for each s
 K_l = cell(1,N); 
 f_l = cell(1,N);
-%generation of the list containing the global stiffness matrices for each s
+
 for s=1:N % for each substructure s
 
     x = (H*(s-1)):H/n:(H*s);   % redefine x domain: 
