@@ -8,7 +8,7 @@ S = 1;    % mm^2
 Fd = 10;   % force in newton 
 E = 2e5;   % young's module in MPa
 
-H = 15;    % H = lenght of a substructure (must be a divisor of L)
+H = 10;    % H = lenght of a substructure (must be a divisor of L)
 h = 5;     % h = lenght of an element inside a single substructure (must be a divisor of H)
 
 
@@ -67,6 +67,9 @@ Kbb_l = cell(1, N);
 fi_l = cell(1, N);
 fb_l = cell(1, N);
 
+Sp_l = cell(1, N);
+bp_l = cell(1, N);
+
 for s=1:N    
     if s == 1 %elimination of the degree of freedom to impose ud
         %just exclude the first line and/or column for internal dofs 
@@ -91,9 +94,96 @@ for s=1:N
 
         inv_Kii_l{s} = inv(Kii_l{s});
     end
+
+    Sp_l{s} = Kbb_l{s}-Kbi_l{s}*inv_Kii_l{s}*Kib_l{s};
+    bp_l{s} = fb_l{s}-Kbi_l{s}*inv_Kii_l{s}*fi_l{s};
 end
 
-%% Distributed conjugate gradient to solve primal interface problem
+%% kernel of Sp_s = rigid body modes of each substructure
+
+Rb_l = cell(1,N);
+for s = 1:N
+    Rb_l{s} = null(Sp_l{s}); % normalized version of the rigid body modes     
+end
+
+%% assemble all the necessary operatiors 
+bp_diam = cat(1, bp_l{:});
+
+Sp_diam = blkdiag(Sp_l{:});
+
+Rb_diam = blkdiag(Rb_l{:});
+
+bp = A_diam * bp_diam;
+
+G = Ab_diam * Rb_diam;
+
+Sp = A_diam * Sp_diam*A_diam';
+
+
+%% Preconditioned conjugate gradient 
+%initialization 
+
+m=100;
+
+beta_i = cell(1,m);
+p = cell(1,m);
+d = cell(1,m);
+
+inv_Sp = inv(Sp);
+
+P = eye(size(Sp)) - G*inv(G'*Sp*G)*G' * Sp;
+
+ui = G*inv(G'*Sp*G)*G' * bp;
+
+ri = P' * (bp - Sp*ui); % = P'*bp
+
+zi = inv_Sp*ri;
+d{1} = zi;
+
+for i=1:m 
+
+    p{i} = P'*Sp*d{i};
+
+    alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
+
+    ui_next = ui +alpha_i * d{i};
+
+    ri_next = ri -alpha_i * p{i};
+
+    zi_next = inv_Sp*ri_next;
+
+    update = zeros(size(zi));
+
+    for j=1:i
+
+        beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
+
+        update = update + beta_i{j}*d{j}; 
+
+    end
+
+    d{i+1} = zi_next + update; %update the search direction
+
+    ri = ri_next;
+    ui = ui_next;
+
+    %%%------------
+    if norm(d{i+1}) < 1e-6 
+        break;
+    end
+    %%%------------
+
+end
+
+ui
+
+
+
+
+%% Distributed conjugate preconditionesd conjugate gradient 
+% to solve primal interface problem
+
+%{
 
 %Initialization phase
 
@@ -102,7 +192,7 @@ ub_diam = Ab_diam'*ub;
 
 ub_l=vert_diam_to_s(ub_diam, N);
 
-%solve the dirichlet problem (DOUBT ON HOW TO IMPOSE ud)
+%solve the dirichlet problem
 ui_l=cell(1,N);
 
 rb_l=cell(1,N);
@@ -128,7 +218,8 @@ db_l=cell(1,N);
 di_l=cell(1,N);
 Sp_db_l=cell(1,N);
 m = 100;
-for k=0:m
+
+for k=0:m 
     k
     db_diam = A_diam'*db;
     db_l = vert_diam_to_s(db_diam, N );
@@ -173,3 +264,9 @@ for k=0:m
 end
 
 
+% from krylov iterative solvers document
+
+% need to change CJ into preconditioed CJ (newman precond)
+% Ideas: try to use chebychev precond or polynomial precond
+
+%}

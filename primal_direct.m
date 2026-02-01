@@ -3,14 +3,13 @@ clc
 
 %% initialisation of parameters
 
-L = 30;   % in mm
-S = 1;    % mm^2
-Fd = 10;   % force in newton 
-E = 2e5;   % young's module in MPa
+L = 30;   % (30) in mm
+S = 1;     % (1)  mm^2
+Fd = 10;   % (10) force in newton 
+E = 2e5;   % (2e5)young's module in MPa
 
-H = 10;    % H = lenght of a substructure (must be a divisor of L)
-h = 5;     % h = lenght of an element inside a single substructure (must be a divisor of H)
-
+H = 10;    % (10) H = lenght of a substructure (must be a divisor of L)
+h = 5;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
@@ -108,7 +107,7 @@ bp_diam = cat(1,bp_l{:});   % 1 for concatenation in first dim : vertical
 % into a list/array that you can initialize with the command cell
 % as you can see in the following A and A bar cases
 
-%% build A and A bar
+%% build A and A bar and assemble Sp
 
 A_diam = A_op(N)
 
@@ -145,10 +144,6 @@ for s=1:N
     %ui_l{s};
 end
 
-ui_diam = cat(1, ui_l{:});
-ui = A_diam*ui_diam
-
-%u = [ui; ub];       
 
 %% kernel of Sp_s = rigid body modes of each substructure
 
