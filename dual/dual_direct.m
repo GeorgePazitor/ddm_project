@@ -120,13 +120,13 @@ bp = A_diam*bp_diam ;
 
 Rb_l = cell(1,N);
 for s = 1:N
-    Sp_l{s}
+    Sp_l{s};
     % null or eig always return a normalized vector 
     % null computes the kernel of the Sp(s) matrix -> rigid.b modes of s
     Rb_l{s} = null(Sp_l{s}, 'rational'); % not normalized rigid body modes 
     s;
     Rb_s = Rb_l{s};
-    Rb_s
+    Rb_s;
 end
 
 
@@ -138,7 +138,7 @@ end
 
 Sd_l = cell(1, N);
 for s=1:N
-    Sd_l{s} = pinv(Sp_l{s}); %OK
+    Sd_l{s} = pinv(Sp_l{s}); 
 end
 
 Sd_diam = blkdiag(Sd_l{:});
@@ -149,11 +149,11 @@ Sd = Ab_diam * Sd_diam * Ab_diam';
 
 Rb_diam = blkdiag(Rb_l{:});
 
-G = Ab_diam * Rb_diam; %OK
+G = Ab_diam * Rb_diam; 
 
-e_diam = Rb_diam' * bp_diam; %OK
+e_diam = Rb_diam' * bp_diam; 
 
-bd = Ab_diam * Sd_diam * bp_diam; %OK
+bd = Ab_diam * Sd_diam * bp_diam; 
 
 B = [Sd, G;
     G', zeros(size(G,2))];
@@ -162,16 +162,14 @@ a = cat(1, -bd, -e_diam);
 
 y = B \ a;
 
-lamb = y(1:size(G,1)); %OK
-alphab_diam  =  y(size(G,1)+1:end); % OK
+lamb = y(1:size(G,1)); 
+alphab_diam  =  y(size(G,1)+1:end); 
 
-lamb_diam = Ab_diam' * lamb; %OK
-
-%Sd_diam = Ab_diam' * Sd *Ab_diam %Ab_diam * Sd_diam * Ab_diam'; %PROBLEM 
+lamb_diam = Ab_diam' * lamb; 
 
 ub_diam = Sd_diam * (bp_diam + lamb_diam) + Rb_diam * alphab_diam;
 
-ub_diam
+ub_diam;
 
 ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
 
