@@ -1,0 +1,4 @@
+Refactor the stopping criteria in the iterative methods to take into account the ri_next/r0_norm
+testing that r0 is bigger than eps before entering the loop (so no 0 division) 
+
+

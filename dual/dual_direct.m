@@ -3,7 +3,7 @@ clc
 
 %% initialisation of parameters
 
-L = 30;   % (30) in mm
+L = 30;   % (30) in mm %k0 = 40 000
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
@@ -109,23 +109,24 @@ bp_diam = cat(1,bp_l{:});   % 1 for concatenation in first dim : vertical
 
 %% build A and A bar and assemble Sp
 
-A_diam = A_op(N)
+A_diam = A_op(N);
 
-Ab_diam = A_bar_op(N)
+Ab_diam = A_bar_op(N);
 
-Sp = A_diam*Sp_diam*A_diam'
-bp = A_diam*bp_diam
+Sp = A_diam*Sp_diam*A_diam';
+bp = A_diam*bp_diam ;
 
 %% kernel of Sp_s = rigid body modes of each substructure
 
 Rb_l = cell(1,N);
 for s = 1:N
+    Sp_l{s}
     % null or eig always return a normalized vector 
     % null computes the kernel of the Sp(s) matrix -> rigid.b modes of s
     Rb_l{s} = null(Sp_l{s}, 'rational'); % not normalized rigid body modes 
     s;
     Rb_s = Rb_l{s};
-    Rb_s;
+    Rb_s
 end
 
 
@@ -133,40 +134,46 @@ end
 %ub = Sp\bp
 %ub_diam=A_diam'*ub;
 
-%% solution of dual shur complement with direct method
+%% computing Sd
 
 Sd_l = cell(1, N);
 for s=1:N
-    Sd_l{s} = pinv(Sp_l{s});    % PROBLEM Sd is not the right one
+    Sd_l{s} = pinv(Sp_l{s}); %OK
 end
 
 Sd_diam = blkdiag(Sd_l{:});
 
-Sd = Ab_diam * Sd_diam * Ab_diam'
+Sd = Ab_diam * Sd_diam * Ab_diam'; 
+
+%% solution of dual shur complement with direct method
 
 Rb_diam = blkdiag(Rb_l{:});
 
-G = Ab_diam * Rb_diam      
+G = Ab_diam * Rb_diam; %OK
 
-e_diam = Rb_diam' * bp_diam;
+e_diam = Rb_diam' * bp_diam; %OK
 
-bd = Ab_diam * Sd_diam * bp_diam;
+bd = Ab_diam * Sd_diam * bp_diam; %OK
 
 B = [Sd, G;
     G', zeros(size(G,2))];
 
 a = cat(1, -bd, -e_diam);
 
-y = B\a;
+y = B \ a;
 
-lamb = y(1:size(G,1));
-alphab_diam  =  y(size(G,1)+1:end);
+lamb = y(1:size(G,1)); %OK
+alphab_diam  =  y(size(G,1)+1:end); % OK
 
-lamb_diam = Ab_diam' * lamb;
+lamb_diam = Ab_diam' * lamb; %OK
+
+%Sd_diam = Ab_diam' * Sd *Ab_diam %Ab_diam * Sd_diam * Ab_diam'; %PROBLEM 
 
 ub_diam = Sd_diam * (bp_diam + lamb_diam) + Rb_diam * alphab_diam;
 
-ub = A_diam * ub_diam;
+ub_diam
+
+ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
 
 ub
 

@@ -1,4 +1,5 @@
 clear all 
+close all
 clc
 
 %% initialisation of parameters
@@ -68,6 +69,7 @@ fi_l = cell(1, N);
 fb_l = cell(1, N);
 
 Sp_l = cell(1, N);
+Sd_l = cell(1, N);
 bp_l = cell(1, N);
 
 for s=1:N    
@@ -96,7 +98,10 @@ for s=1:N
     end
 
     Sp_l{s} = Kbb_l{s}-Kbi_l{s}*inv_Kii_l{s}*Kib_l{s};
+
     bp_l{s} = fb_l{s}-Kbi_l{s}*inv_Kii_l{s}*fi_l{s};
+
+    Sd_l{s} = pinv(Sp_l{s});
 end
 
 %% kernel of Sp_s = rigid body modes of each substructure
@@ -111,70 +116,89 @@ bp_diam = cat(1, bp_l{:});
 
 Sp_diam = blkdiag(Sp_l{:});
 
+Sd_diam = blkdiag(Sd_l{:}); %Sp plus diam
+
 Rb_diam = blkdiag(Rb_l{:});
 
 bp = A_diam * bp_diam;
 
-G = Ab_diam * Rb_diam;
+I = cell(1, N);
+for s = 1:N
+    if s==1
+        I{s} = eye(1);
+    elseif s==N
+        I{s} = eye(1);
+    else
+        I{s} = eye(2); % identity matrix for internal degrees of freedom
+    end
+end
 
-Sp = A_diam * Sp_diam*A_diam';
+M_diam  = blkdiag(I{:}); % 1d bar: n elements -> n+1 dofs 
 
+A_tild  = (A_diam * M_diam * A_diam') \ A_diam * M_diam;
 
-%% Preconditioned conjugate gradient 
+Sp_tild = A_tild * Sd_diam * A_tild';
+
+Sp = A_diam * Sp_diam * A_diam';
+
+G_tilde = A_tild * Rb_diam; 
+
+%% Preconditioned conjugate gradient with Neumann preconditioner 
 %initialization 
 
 m=100;
-
+epsilon = 1e-10;
 beta_i = cell(1,m);
 p = cell(1,m);
 d = cell(1,m);
 
-inv_Sp = inv(Sp);
+P = eye(size(Sp)) - G_tilde * pinv(G_tilde' * Sp * G_tilde) * G_tilde' * Sp;
 
-P = eye(size(Sp)) - G*inv(G'*Sp*G)*G' * Sp;
+% here if I compute the inverse with \ I wil get the wrong solution
+ui = G_tilde* pinv(G_tilde' * Sp * G_tilde) * G_tilde' * bp;
 
-ui = G*inv(G'*Sp*G)*G' * bp;
+ri = P' * (bp - Sp * ui ); % = P'*bp
 
-ri = P' * (bp - Sp*ui); % = P'*bp
-
-zi = inv_Sp*ri;
+zi = Sp_tild *ri;
 d{1} = zi;
 
-for i=1:m 
+r0_norm = norm(ri);
+if r0_norm > epsilon
 
-    p{i} = P'*Sp*d{i};
-
-    alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
-
-    ui_next = ui +alpha_i * d{i};
-
-    ri_next = ri -alpha_i * p{i};
-
-    zi_next = inv_Sp*ri_next;
-
-    update = zeros(size(zi));
-
-    for j=1:i
-
-        beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
-
-        update = update + beta_i{j}*d{j}; 
-
+    for i=1:m 
+        p{i} = P'*Sp*d{i};
+    
+        alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
+    
+        ui_next = ui +alpha_i * d{i};
+    
+        ri_next = ri -alpha_i * p{i};
+    
+        zi_next = Sp_tild * ri_next;
+    
+        update = zeros(size(zi));
+    
+        for j=1:i
+    
+            beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
+    
+            update = update + beta_i{j}*d{j}; 
+    
+        end
+    
+        d{i+1} = zi_next + update; %update the search direction
+    
+        ri = ri_next;
+        ui = ui_next;
+    
+        %%%------------
+        if norm(ri)/r0_norm < epsilon 
+            break;
+        end
+        %%%------------
+    
     end
-
-    d{i+1} = zi_next + update; %update the search direction
-
-    ri = ri_next;
-    ui = ui_next;
-
-    %%%------------
-    if norm(d{i+1}) < 1e-6 
-        break;
-    end
-    %%%------------
-
 end
-
 ui
 
 

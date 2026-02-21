@@ -35,7 +35,7 @@ node = [1:n        % matrix of n column vectors, each of which
 %% Generate internal and interface node lists for each substructure
 [i_list, b_list] = node_lists(N,n); 
 
-%% Generate list containing the global stiffness matrices for each s
+%% Generate list containing the global stiffness matrices for each s, FEM
 
 K_l = cell(1,N); 
 f_l = cell(1,N);
@@ -109,12 +109,12 @@ bp_diam = cat(1,bp_l{:});   % 1 for concatenation in first dim : vertical
 
 %% build A and A bar and assemble Sp
 
-A_diam = A_op(N)
+A_diam = A_op(N);
 
-Ab_diam = A_bar_op(N)
+Ab_diam = A_bar_op(N);
 
-Sp = A_diam*Sp_diam*A_diam'
-bp = A_diam*bp_diam
+Sp = A_diam*Sp_diam*A_diam';
+bp = A_diam*bp_diam;
 
 % solution of primal shur complement with direct method
 ub = Sp\bp
@@ -152,9 +152,9 @@ for s = 1:N
     % null or eig always return a normalized vector 
     % null computes the kernel of the Sp(s) matrix -> rigid.b modes of s
     R_l{s} = null(Sp_l{s}); % normalized version of the rigid body modes 
-    s
+    s;
     R_s = R_l{s};
-    R_s
+    R_s;
 end
 
 
