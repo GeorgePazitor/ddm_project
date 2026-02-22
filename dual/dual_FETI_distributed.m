@@ -3,13 +3,13 @@ clc
 
 %% initialisation of parameters
 
-L = 30;   % (30) in mm %k0 = 40 000
+L = 1000;   % (30) in mm %k0 = 40 000
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
 
-H = 10;    % (10) H = lenght of a substructure (must be a divisor of L)
-h = 5;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
+H = 100;    % (10) H = lenght of a substructure (must be a divisor of L)
+h = 10;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
@@ -55,6 +55,11 @@ for s=1:N % for each substructure s
     if s == N 
         f_l{s}(end) = Fd; % apply external force to the last node of the last substructure
     end
+    %%% ---FOR THE SAKE OF ITERATIVE METHODS VERIFICATION---
+    %if s == 2 
+    %    f_l{s}(2) = Fd; % apply external force 
+    %end
+    %%% ----------------------------------------------------
 end
 %% compute the internal,interface and combined submatrices and subvectors
 
@@ -83,6 +88,18 @@ for s=1:N
         fb_l{s} = f_l{s}(b_list{s});
 
         inv_Kii_l{s} = inv(Kii_l{s});
+    %%% ---FOR THE SAKE OF ITERATIVE METHODS VERIFICATION---
+    %elseif s == N %elimination of the degree to impose ud = 0 at the end
+    %    Kii_l{s} = K_l{s}(i_list{s}(1:end-1), i_list{s}(1:end-1));
+    %    Kib_l{s}= K_l{s}(i_list{s}(1:end-1), b_list{s});
+    %    Kbi_l{s} = K_l{s}(b_list{s}, i_list{s}(1:end-1));
+    %    Kbb_l{s} = K_l{s}(b_list{s}, b_list{s});
+
+    %    fi_l{s} = f_l{s}(i_list{s}(1:end-1));
+    %    fb_l{s} = f_l{s}(b_list{s});
+
+    %    inv_Kii_l{s} = inv(Kii_l{s});
+    %%% ----------------------------------------------------
     else
 
         Kii_l{s} = K_l{s}(i_list{s}, i_list{s});
@@ -125,7 +142,7 @@ Sd_diam = blkdiag(Sd_l{:});
 
 bp_diam = cat(1, bp_l{:});
 
-%Sd = Ab_diam * Sd_diam * Ab_diam'; 
+Sd = Ab_diam * Sd_diam * Ab_diam'; 
 
 %% dual shur complement operators
 
@@ -150,7 +167,6 @@ Rb_diam = blkdiag(Rb_l{:});
 bp = A_diam * bp_diam;
 
 I = cell(1, N);
-% Should I multiply by the multiplicity?
 for s = 1:N
     if s==1
         I{s} = eye(1);
@@ -165,9 +181,9 @@ M_diam = blkdiag(I{:}); % 1d bar: n elements -> n+1 dofs same as M
 
 Ab_tild  = (Ab_diam * inv(M_diam) * Ab_diam')' *  Ab_diam * inv(M_diam) ;
 
-Sd_tild = Ab_tild * Sp_diam * Ab_tild';
+%Sd_tild = Ab_tild * Sd_diam * Ab_tild';
 
-Sd = Ab_diam * Sd_diam * Ab_diam';
+%Sd = Ab_diam * Sd_diam * Ab_diam';
 
 %% Preconditioned conjugate gradient with Neumann preconditioner 
 %initialization 
@@ -176,64 +192,105 @@ m=100;
 epsilon = 1e-10;
 
 beta_i = cell(1,m);
-p = cell(1,m);
-d = cell(1,m);
+p = cell(1, m);
+d = cell(1, m);
+
+p_l = cell(1, N);
+d_l = cell(1, N);
+zi_l = cell(1, N);
+ri_l = cell(1,N);
+tmp_l = cell(1,N);
+lambda_l = cell(1, N);
 
 Q = eye(size(G,1));
-
 P = eye(size(Q)) - Q * G * inv(G' * Q * G) * G';
-
 lambda_i = - Q * G * inv(G' * Q * G) * e_diam;
 
-ri = P' * (-bd - Sd * lambda_i );
+% Distribute initialization of lambda to
+% solve the local Neumann problem
+lambda_diam = Ab_diam'*lambda_i;
+lambda_l = vert_diam_to_s(lambda_diam, N);
 
-zi = P * Sd_tild *ri;
+for s=1:N
+    ri_l{s} =  Sd_l{s} * lambda_l{s}; 
+end
 
-d{1} = zi;
+ri_diam = cat(1, ri_l{:});
+ri = P'*(-bd-(Ab_diam*ri_diam));
+
+% Distribute initialization of lambda to
+% solve for the local Dirichlet preconditioner
+ri_diam = Ab_tild'*ri;
+ri_l = vert_diam_to_s(ri_diam, N);
+
+for s=1:N
+    tmp_l{s} = Sp_l{s}*ri_l{s};
+end
+
+tmp_diam = cat(1, tmp_l{:});
+zi = P'* (Ab_tild*tmp_diam); %apply the projector to search on the good search space 
+
+d{1}=zi;   %initialize the search direction
 
 r0_norm = norm(ri);
-if r0_norm > epsilon
-
-    for i=1:m 
-        
-        p{i} = P' * Sd * d{i};
+if norm(ri)/r0_norm > epsilon 
+    for i=1:m
+        i
+        % Distribute initialization of d to
+        % solve the local Neumann problem
+        d_diam = Ab_diam' * d{i};
+        d_l = vert_diam_to_s(d_diam, N );
     
+        for s=1:N     
+            p_l{s} = Sd_l{s} * d_l{s};
+        end
+    
+        p_diam= cat(1, p_l{:});
+        p{i}= P' * (Ab_diam * p_diam); %apply the projector
+    
+        % global conjugate gradient on assembled residue
         alpha_i = (ri'*d{i}) / (d{i}'*p{i});  
     
         lambda_i = lambda_i + alpha_i * d{i};
-    
+        
         ri = ri - alpha_i * p{i};
     
-        zi = P * Sd_tild * ri;
+        % Distribute the new residue to
+        % solve for the local Dirichlet preconditioner
+        ri_diam = Ab_tild' * ri;
+        r_l = vert_diam_to_s(ri_diam, N );
     
+        for s=1:N
+            zi_l{s} = Sp_l{s}*r_l{s};
+        end
+    
+        zi_diam = cat(1, zi_l{:});
+        zi = P * (Ab_tild * zi_diam);
+        
+        % reorthogonalization of the search directions
+        % necessary due to numerical incaccuracies
         update = zeros(size(zi));
-    
         for j=1:i
-    
             beta_i{j} = -(zi)'*p{j} / (d{j}'*p{j});
-    
-            update = update + beta_i{j}*d{j}; 
-    
+            update = update + beta_i{j}*d{j};     
         end
     
         d{i+1} = zi + update; %update the search direction
-        
-        norm(ri)
+    
         %%%------------
         if norm(ri)/r0_norm < epsilon 
             break;
         end
         %%%------------
-        
     end
+    
 end
 
-%post processing
-
+%post processing - TODO, distribute the process 
 alpha_diam = (G' * Q * G ) \ G' * Q * (- bd -  Sd * lambda_i );
 ub_diam = Sd_diam * (bp_diam + Ab_diam' * lambda_i) + Rb_diam * alpha_diam;
 
 ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
-
 ub
+
 

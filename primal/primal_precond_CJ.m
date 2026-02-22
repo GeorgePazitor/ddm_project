@@ -166,6 +166,7 @@ r0_norm = norm(ri);
 if r0_norm > epsilon
 
     for i=1:m 
+        
         p{i} = P'*Sp*d{i};
     
         alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
@@ -196,7 +197,6 @@ if r0_norm > epsilon
             break;
         end
         %%%------------
-    
     end
 end
 ub = ui;

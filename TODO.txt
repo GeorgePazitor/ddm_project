@@ -4,3 +4,10 @@ testing that r0 is bigger than eps before entering the loop (so no 0 division)
 - Build the discretized trace operator
 
 - solve zi/zi_next problem, only one is useful
+
+Among the iterative solvers we have to verify the correctness
+
+- dual_FETI ok, primal_CJ ok, dual_FETI_distributede ok 
+    (the solvers give solutions with small differences to one another, much higher than machine precesion)
+
+-primal_precond_CJ has to be debugged

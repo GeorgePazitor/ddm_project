@@ -63,39 +63,65 @@ for s=1:N % for each substructure s
     if s == N 
         f_l{s}(end) = Fd; % apply external force to the last node of the last substructure
     end
+    %if s == 2 
+    %    f_l{s}(2) = Fd; % apply external force 
+    %end
 end
+%% compute the internal,interface and combined submatrices and subvectors
 
-%% Compute the local dirichlet operator Sp (and bp) for each substructure
-% (Primal shur complement)
+inv_Kii_l = cell(1, N);
+Kii_l = cell(1, N);
+Kib_l = cell(1, N);
+Kbi_l = cell(1, N);
+Kbb_l = cell(1, N);
+
+fi_l = cell(1, N);
+fb_l = cell(1, N);
 
 Sp_l = cell(1, N);
 bp_l = cell(1, N);
 
-for s=1:N
-    if s == 1 %elimination of the degree of freedom to impose ud
-        %just exclude the first line and column for internal dofs 
-        Kii = K_l{s}(i_list{s}(2:end), i_list{s}(2:end));
-        Kib = K_l{s}(i_list{s}(2:end), b_list{s});
-        Kbi = K_l{s}(b_list{s}, i_list{s}(2:end));
-        Kbb = K_l{s}(b_list{s}, b_list{s});
 
-        fi = f_l{s}(i_list{s}(2:end));
-        fb = f_l{s}(b_list{s});
+for s=1:N    
+    if s == 1 %elimination of the degree of freedom to impose ud
+        %just exclude the first line and/or column for internal dofs 
+        Kii_l{s} = K_l{s}(i_list{s}(2:end), i_list{s}(2:end));
+        Kib_l{s}= K_l{s}(i_list{s}(2:end), b_list{s});
+        Kbi_l{s} = K_l{s}(b_list{s}, i_list{s}(2:end));
+        Kbb_l{s} = K_l{s}(b_list{s}, b_list{s});
+
+        fi_l{s} = f_l{s}(i_list{s}(2:end));
+        fb_l{s} = f_l{s}(b_list{s});
+
+        inv_Kii_l{s} = inv(Kii_l{s});
+         %%% ---FOR THE SAKE OF ITERATIVE METHODS VERIFICATION---
+    %elseif s == N %elimination of the degree to impose ud = 0 at the end
+    %    Kii_l{s} = K_l{s}(i_list{s}(1:end-1), i_list{s}(1:end-1));
+    %    Kib_l{s}= K_l{s}(i_list{s}(1:end-1), b_list{s});
+    %    Kbi_l{s} = K_l{s}(b_list{s}, i_list{s}(1:end-1));
+    %    Kbb_l{s} = K_l{s}(b_list{s}, b_list{s});
+
+    %    fi_l{s} = f_l{s}(i_list{s}(1:end-1));
+    %    fb_l{s} = f_l{s}(b_list{s});
+
+    %    inv_Kii_l{s} = inv(Kii_l{s});
+    %%% ----------------------------------------------------
     else
 
-        Kii = K_l{s}(i_list{s}, i_list{s});
-        Kib = K_l{s}(i_list{s}, b_list{s});
-        Kbi = K_l{s}(b_list{s}, i_list{s});
-        Kbb = K_l{s}(b_list{s}, b_list{s});
+        Kii_l{s} = K_l{s}(i_list{s}, i_list{s});
+        Kib_l{s} = K_l{s}(i_list{s}, b_list{s});
+        Kbi_l{s} = K_l{s}(b_list{s}, i_list{s});
+        Kbb_l{s} = K_l{s}(b_list{s}, b_list{s});
     
-        fi = f_l{s}(i_list{s});
-        fb = f_l{s}(b_list{s});
+        fi_l{s} = f_l{s}(i_list{s});
+        fb_l{s} = f_l{s}(b_list{s});
+
+        inv_Kii_l{s} = inv(Kii_l{s});
     end
-    inv_Kii = inv(Kii);
-    Sp_l{s} = Kbb-Kbi*inv_Kii*Kib;
 
-    bp_l{s} = fb-Kbi*inv_Kii*fi;
+    Sp_l{s} = Kbb_l{s}- Kbi_l{s}*inv_Kii_l{s}*Kib_l{s};
 
+    bp_l{s} = fb_l{s} - Kbi_l{s} * inv_Kii_l{s}* fi_l{s};
 end
 
 % use {:} to expand the list in its individual items
@@ -198,9 +224,3 @@ for s=1:N
     %ui_l{s};
 end
 %}
-
-
-
-
-
-

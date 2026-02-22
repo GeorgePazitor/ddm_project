@@ -1,4 +1,5 @@
 clear all 
+close all
 clc
 
 %% initialisation of parameters
@@ -8,7 +9,7 @@ S = 1;    % mm^2
 Fd = 10;   % force in newton 
 E = 2e5;   % young's module in MPa
 
-H = 15;    % H = lenght of a substructure (must be a divisor of L)
+H = 10;    % H = lenght of a substructure (must be a divisor of L)
 h = 5;     % h = lenght of an element inside a single substructure (must be a divisor of H)
 
 
@@ -128,8 +129,9 @@ db_l=cell(1,N);
 di_l=cell(1,N);
 Sp_db_l=cell(1,N);
 m = 100;
-for k=0:m
-    k
+
+for k=1:m
+    
     db_diam = A_diam'*db;
     db_l = vert_diam_to_s(db_diam, N );
     % solve local Dirichlet problem
@@ -172,4 +174,4 @@ for k=0:m
     
 end
 
-
+ub
