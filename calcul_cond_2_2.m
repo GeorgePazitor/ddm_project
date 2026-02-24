@@ -1,6 +1,15 @@
 function [cond_Sp, cond_K_global] = calcul_cond_2_2(L, S, E, H, h)
     % CALCUL_COND Calcule le conditionnement de Sp et de K global
     
+    %% initialisation of parameters
+    if nargin < 1 || isempty(H), H = 10; end
+    if nargin < 2 || isempty(h), h = 5; end
+    if nargin < 3 || isempty(L), L = 30; end
+    if nargin < 4 || isempty(S), S = 1; end
+    %if nargin < 5 || isempty(Fd),Fd = 10; end
+    if nargin < 6 || isempty(E), E = 2e5; end
+    %if nargin < 7 || isempty(tol), tol = 1e-6; end
+
     %% 1. Paramètres dérivés
     N = round(L/H);     % Nombre de sous-domaines
     n = round(H/h);     % Nombre d'éléments par sous-domaine
