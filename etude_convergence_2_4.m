@@ -57,20 +57,25 @@ figure('Name', 'Etude de Scalabilité - Primal Schur', 'Color', 'w');
 % Sous-graphe 1 : Cas de l'exercice
 subplot(1, 2, 1);
 semilogx(results_h_H1, results_iter1, '-bo', 'LineWidth', 2, 'MarkerFaceColor', 'b');
-xlabel('h / H (Finesse relative)');
-ylabel('Nombre d''itérations');
-title(['Cas Exercice : N = ', num2str(L/H1), ' sous-domaines']);
+xlabel('h / H (Finesse relative)', 'Color', 'w');
+ylabel('Nombre d''itérations', 'Color', 'w');
+title(['Cas Exercice : N = ', num2str(L/H1), ' sous-domaines'], 'Color', 'w');
 grid on;
 ylim([0 max(results_iter1)+5]); % Ajuste l'échelle
 set(gca, 'XDir', 'reverse'); % On inverse l'axe X pour voir h/H diminuer vers la droite (raffinement)
+set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]); % axes en blanc, grille légèrement grise
 
 % Sous-graphe 2 : Cas Démonstration
 subplot(1, 2, 2);
 semilogx(results_h_H2, results_iter2, '-ro', 'LineWidth', 2, 'MarkerFaceColor', 'r');
-xlabel('h / H (Finesse relative)');
-ylabel('Nombre d''itérations');
-title(['Cas Démonstration : N = ', num2str(L/H2), ' sous-domaines']);
+xlabel('h / H (Finesse relative)', 'Color', 'w');
+ylabel('Nombre d''itérations', 'Color', 'w');
+title(['Cas Démonstration : N = ', num2str(L/H2), ' sous-domaines'], 'Color', 'w');
 grid on;
 set(gca, 'XDir', 'reverse');
+set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]); % axes en blanc, grille légèrement grise
+
+% Assurer que le fond de la figure est sombre pour contraste (si souhaité)
+set(gcf, 'Color', 'k');
 
 sgtitle('Question 2.4 : Scalabilité du Gradient Conjugué (Sans Précond.)');
