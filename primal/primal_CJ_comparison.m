@@ -3,7 +3,7 @@ close all
 clc
 addpath('utils')
 %% initialisation of parameters
-L = 100000;   % (30) in mm
+L = 1000000;   % (30) in mm
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
@@ -47,8 +47,7 @@ end
 
 Rb_l = cell(1,N);
 for s = 1:N
-    null(Sp_l{s})
-    Rb_l{s} = null(Sp_l{s}, 1e-6); % normalized version of the rigid body modes     
+    Rb_l{s} = null(Sp_l{s}); % normalized version of the rigid body modes     
 end
 
 %% assemble all the necessary operatiors 
@@ -83,7 +82,7 @@ Sp = A_diam * Sp_diam * A_diam';
 
 G_tilde = A_tild * Rb_diam; 
 
-%% Preconditioned conjugate gradient with Neumann preconditioner + reorthogonalisation
+%% conjugate gradient 
 %initialization 
 
 m=3*N;
@@ -92,44 +91,38 @@ beta_i = cell(1,m);
 p = cell(1,m);
 d = cell(1,m);
 
-P = eye(size(Sp)) - G_tilde * pinv(G_tilde' * Sp * G_tilde) * G_tilde' * Sp;
-
 % here if I compute the inverse with \ I wil get the wrong solution
-ui = G_tilde* pinv(G_tilde' * Sp * G_tilde) * G_tilde' * bp;
+ui = zeros(size(bp)); %pinv(Sp)* bp;
 
-ri = P' * (bp - Sp * ui ); % = P'*bp
+ri = (bp - Sp * ui ); % = P'*bp
 
-zi = Sp_tild *ri;
-d{1} = zi;
+d{1} = ri;
 
 residuals = zeros(1, m);
-ui
+
 r0_norm = norm(ri);
 if r0_norm > epsilon
 
     for i=1:m 
         i;
-        p{i} = P'*Sp*d{i};
+        p{i} = Sp*d{i};
     
         alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
     
-        ui_next = ui +alpha_i * d{i};
+        ui_next = ui + alpha_i * d{i};
     
-        ri_next = ri -alpha_i * p{i};
+        ri_next = ri - alpha_i * p{i};
+        
+        %update = zeros(size(zi));
     
-        zi_next = Sp_tild * ri_next;
+        %for j=1:i
+        %    beta_i{j} = -(ri_next)'*p{j} / (d{j}'*p{j});
+        %    update = update + beta_i{j}*d{j}; 
+        %end
     
-        update = zeros(size(zi));
-    
-        for j=1:i
-    
-            beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
-    
-            update = update + beta_i{j}*d{j}; 
-    
-        end
-    
-        d{i+1} = zi_next + update; %update the search direction
+        beta_i = -ri_next'*p{i} / (d{i}'*p{i});
+
+        d{i+1} = ri_next + beta_i*d{i};%update; %update the search direction
     
         ri = ri_next;
         ui = ui_next;
@@ -144,11 +137,68 @@ if r0_norm > epsilon
 end
 ub = ui;
 i;
-ub
+ub;
+
+
+%% Precond conjugate gradient with neumann preconditioner
+%initialization 
+
+m=3*N;
+epsilon = 1e-10;
+beta_i = cell(1,m);
+p = cell(1,m);
+d = cell(1,m);
+
+% here if I compute the inverse with \ I wil get the wrong solution
+ui = zeros(size(bp)); %pinv(Sp)* bp;
+
+ri = (bp - Sp * ui ); % = P'*bp
+d{1} = ri;
+zi = Sp_tild *ri;
+d{1} = zi;
+
+residuals_prec = zeros(1, m);
+r0_norm = norm(ri);
+if r0_norm > epsilon
+
+    for i=1:m 
+        i;
+        p{i} = Sp*d{i};
+    
+        alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
+    
+        ui_next = ui + alpha_i * d{i};
+    
+        ri_next = ri - alpha_i * p{i};
+    
+        zi_next = Sp_tild * ri_next;
+    
+            
+        beta_i = -zi_next'*p{i} / (d{i}'*p{i});
+
+        d{i+1} = zi_next + beta_i * d{i}; %update the search direction
+    
+        ri = ri_next;
+        ui = ui_next;
+
+        residuals_prec(i) = norm(ri)/r0_norm;
+        %%%--------convergence criterion-----
+        if norm(ri)/r0_norm < epsilon 
+            break;
+        end
+        %%%----------------------------------
+    end
+end
+ub = ui;
+i;
+ub;
 
 plot(1:m, residuals, Color="red");
+hold on
+plot(1:m, residuals_prec, Color="blue");
+legend("CG", "CG + perconditioner")
 xlabel("Iteration i");
-ylabel("norm_ri / norm_r0");
-title("relative residual");
+ylabel("norm\_ri / norm\_r0");
+title("Relative residual comparison");
 
 

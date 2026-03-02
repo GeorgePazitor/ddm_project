@@ -8,14 +8,16 @@ S = 10;    % mm^2
 Fd = 10;   % force in newton 
 E = 2e5;   % young's module in MPa
 
-% for the finite element method
-n = 4;    % n = number of elements -> n+1 nodes
+d = 1000;  %number of discretization points for the analytical solution
 
-x = linspace(0, L, 1000); %define a discretized domain for x
+% for the finite element method
+n = 15000;    % n = number of elements -> n+1 nodes
+
+x = linspace(0, L, d); %define a discretized domain for x
 
 u_x = @(x) (Fd/(E*S))*x ; %define the analytical solution in displacement 
 
-stress_xx = Fd/S * ones(1000, 1); %define the analytical solution in stress
+stress_xx = Fd/S * ones(d, 1); %define the analytical solution in stress
 
 figure(1) 
 plot(x, u_x(x), 'g-' )
@@ -28,7 +30,7 @@ hold on
 F = zeros(n+1, 1); % initialisation of the shape of the force vector
 F(n+1) = Fd;       % external force applied to the last node 
 
-x = 0:100/n:100;   % redefine x domain: 
+x = 0:L/n:L;   % redefine x domain: 
 
 node = [1:n        % matrix of n column vectors, each of which 
         2:n+1];    % corresponds to an element and its nodes  
@@ -37,9 +39,9 @@ node = [1:n        % matrix of n column vectors, each of which
 K = zeros(n+1);    % initialize the global stiffness matrix
 
 for e=1:n          % for each element 
-    e
+    e;
     le = x(node(2, e)) - x(node(1,e));    % element lenght x2-x1
-    ke = E*S/le * (eye(2) - flip(eye(2)))% local stiffness matrix
+    ke = E*S/le * (eye(2) - flip(eye(2)));% local stiffness matrix
     % assemble the global stiffness matrix with local contribution of ke
     K(node(1, e), node(1,e)) =  K(node(1, e), node(1,e)) + ke(1,1);
     K(node(1, e), node(2,e)) =  K(node(1, e), node(2,e)) + ke(1,2);
@@ -47,16 +49,16 @@ for e=1:n          % for each element
     K(node(2, e), node(2,e)) =  K(node(2, e), node(2,e)) + ke(2,2);
 
 end
-K
+K;
 
 u_1 = 0; % boundary conditions
 
 % to solve the linear system -> remoove dof where ud = 0 
 F_1 = F(2:n+1);        
 K_1 = K(2:n+1, 2:n+1); % elimination of first row/first column
-
+tic
 u_int = K_1\F_1;       % to solve a linear system K*u=f we can multiply 
-                       % by the inverse of K on both sides
+toc                      % by the inverse of K on both sides
                        % so we have now u=K^-1*f, the backslash is used in
                        % matlab to solve linear systems and is placed with 
                        % a similar logic as the inverse of a matrix  
@@ -82,8 +84,10 @@ xlabel('Position (mm)');
 ylabel('Displacement (mm)');
 title('Displacement Comparison');
 
+x_center = (x(1:n) + x(2:n+1)) / 2;
+
 figure(2)
-plot(x(1:n), stress, 'ro')
+plot(x_center, stress, 'ro')
 legend('Analytical Stress', 'FEM Stress');
 xlabel('Position (mm)');
 ylabel('Stress (MPa)');

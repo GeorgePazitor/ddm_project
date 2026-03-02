@@ -1,14 +1,14 @@
 clear all 
 close all
 clc
-addpath('utils')
+addpath('utils');
 %% initialisation of parameters
 L = 100000;   % (30) in mm
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
 
-H = 1000;    % (10) H = lenght of a substructure (must be a divisor of L)
+H = 100;    % (10) H = lenght of a substructure (must be a divisor of L)
 h = 10;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
@@ -17,10 +17,11 @@ N = L/H; % number of substructures
 A_diam = A_op(N);
 Ab_diam = A_bar_op(N);
 %% FEM for each substructure
+
 node = [1:n        % matrix of n column vectors, each of which has the 
         2:n+1];    % corresponds to an element an its constitutive nodes  
 %% Generate internal and interface node lists for each substructure
-[i_list, b_list] = node_lists(N,n); 
+[i_list, b_list] = node_lists(N,n);  
 
 %% Generate list containing the global stiffness matrices for each s, FEM
 [K_l, f_l] = global_k_f_lists(N, H, E, S, Fd, n, node); 
@@ -28,26 +29,23 @@ node = [1:n        % matrix of n column vectors, each of which has the
 %% Compute the internal,interface and combined submatrices and subvectors
 [Kii_l, Kib_l, Kbi_l, Kbb_l, fi_l, fb_l] = internal_interface_partition(K_l, f_l, i_list, b_list, N);
 
-%% Compute the local dirichlet operator Sp (and bp) for each substructure
-% (Primal shur complement)
+%%
 Sp_l = cell(1, N);
 Sd_l = cell(1, N);
 bp_l = cell(1, N);
 
 for s=1:N    
-
     Sp_l{s} = Kbb_l{s}-Kbi_l{s}*(Kii_l{s}\Kib_l{s});
 
     bp_l{s} = fb_l{s}-Kbi_l{s}*(Kii_l{s}\fi_l{s});
 
-    Sd_l{s} = pinv(Sp_l{s});
+    Sd_l{s} = inv(Sp_l{s});
 end
 
 %% kernel of Sp_s = rigid body modes of each substructure
 
 Rb_l = cell(1,N);
 for s = 1:N
-    null(Sp_l{s})
     Rb_l{s} = null(Sp_l{s}, 1e-6); % normalized version of the rigid body modes     
 end
 
@@ -92,44 +90,68 @@ beta_i = cell(1,m);
 p = cell(1,m);
 d = cell(1,m);
 
-P = eye(size(Sp)) - G_tilde * pinv(G_tilde' * Sp * G_tilde) * G_tilde' * Sp;
-
+%P = eye(size(Sp))- G_tilde * pinv(G_tilde' * Sp * G_tilde) * G_tilde' * Sp;
 % here if I compute the inverse with \ I wil get the wrong solution
-ui = G_tilde* pinv(G_tilde' * Sp * G_tilde) * G_tilde' * bp;
+%ui = G_tilde* pinv(G_tilde' * Sp * G_tilde) * G_tilde' * bp;
+%ui = inv(Sp)* bp;
+ui=zeros(size(bp));
 
-ri = P' * (bp - Sp * ui ); % = P'*bp
+%ri = P' * (bp - Sp * ui ); % = P'*bp
+ri = bp - Sp * ui;
 
-zi = Sp_tild *ri;
+ri_diam = A_tild'*ri;
+ri_l = vert_diam_to_s(ri_diam, N);
+
+for s=1:N
+    tmp_l{s} = Sd_l{s}*ri_l{s};
+end
+
+tmp_diam = cat(1, tmp_l{:});
+zi = A_tild*tmp_diam; 
+
 d{1} = zi;
 
 residuals = zeros(1, m);
-ui
+
 r0_norm = norm(ri);
 if r0_norm > epsilon
 
     for i=1:m 
         i;
-        p{i} = P'*Sp*d{i};
+        p{i} = Sp*d{i};  %P'*Sp*d{i};
     
         alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
     
         ui_next = ui +alpha_i * d{i};
     
         ri_next = ri -alpha_i * p{i};
+
     
-        zi_next = Sp_tild * ri_next;
+        ri_diam = A_tild'*ri_next;
+        ri_l = vert_diam_to_s(ri_diam, N);
+        
+        for s=1:N
+            tmp_l{s} = Sd_l{s}*ri_l{s};
+        end
+        
+        tmp_diam = cat(1, tmp_l{:});
+        zi_next = A_tild*tmp_diam; 
     
         update = zeros(size(zi));
     
-        for j=1:i
+        %for j=1:i
     
-            beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
+        %    beta_i{j} = -(zi_next)'*p{j} / (d{j}'*p{j});
     
-            update = update + beta_i{j}*d{j}; 
+        %    update = update + beta_i{j}*d{j}; 
     
-        end
+        %end
     
-        d{i+1} = zi_next + update; %update the search direction
+        %d{i+1} = zi_next + update; %update the search direction
+
+        beta_i = -zi_next'*p{i} / (d{i}'*p{i});
+
+        d{i+1} = zi_next + beta_i * d{i}; %update the search direction
     
         ri = ri_next;
         ui = ui_next;
@@ -143,8 +165,8 @@ if r0_norm > epsilon
     end
 end
 ub = ui;
-i;
-ub
+i
+ub;
 
 plot(1:m, residuals, Color="red");
 xlabel("Iteration i");
