@@ -39,20 +39,28 @@ end
 
 % --- Tracé des courbes ---
 
-% Figure pour Sp (Question 2.2a)
+% Figure for Sp (Question 2.2a)
 figure(1);
 loglog(store_h_H, store_cond_Sp, '-o', 'LineWidth', 2);
-xlabel('h / H (finesse relative)', 'FontSize', 12);
-ylabel('Conditionnement \kappa(S_p)', 'FontSize', 12);
-title('Conditionnement de la matrice de Schur Primal', 'FontSize', 14);
+xlabel('h / H (relative mesh size)', 'FontSize', 12);
+ylabel('Condition number \kappa(S_p)', 'FontSize', 12);
+title('Conditioning of the Primal Schur Complement', 'FontSize', 14);
 grid on;
 
-% Figure pour K global (Question 2.2b)
+% Figure for Sp (Question 2.2a) - linéaire (pas en échelle logarithmique)
 figure(2);
+semilogy(store_h_H, store_cond_Sp, '-o', 'LineWidth', 2);
+xlabel('h / H (relative mesh size)', 'FontSize', 12);
+ylabel('Condition number \kappa(S_p)', 'FontSize', 12);
+title('Conditioning of the Primal Schur Complement (linear scale)', 'FontSize', 14);
+grid on;
+
+% Figure for global K (Question 2.2b)
+figure(3);
 loglog(store_h, store_cond_K, '-r+', 'LineWidth', 2);
-xlabel('h (taille élément)', 'FontSize', 12);
-ylabel('Conditionnement \kappa(K)', 'FontSize', 12);
-title('Conditionnement de la matrice de rigidité Globale', 'FontSize', 14);
+xlabel('h (element size)', 'FontSize', 12);
+ylabel('Condition number \kappa(K)', 'FontSize', 12);
+title('Conditioning of the Global Stiffness Matrix', 'FontSize', 14);
 grid on;
 
 disp('Analyse terminée. Figures générées.');

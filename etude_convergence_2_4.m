@@ -54,26 +54,26 @@ end
 
 figure('Name', 'Etude de Scalabilité - Primal Schur', 'Color', 'w');
 
-% Sous-graphe 1 : Cas de l'exercice
+% Subplot 1: Exercise case
 subplot(1, 2, 1);
 semilogx(results_h_H1, results_iter1, '-bo', 'LineWidth', 2, 'MarkerFaceColor', 'b');
-xlabel('h / H (Finesse relative)', 'Color', 'w');
-ylabel('Nombre d''itérations', 'Color', 'w');
-title(['Cas Exercice : N = ', num2str(L/H1), ' sous-domaines'], 'Color', 'w');
+xlabel('h / H (Relative mesh size)', 'Color', 'w');
+ylabel('Number of iterations', 'Color', 'w');
+title(['Exercise Case: N = ', num2str(L/H1), ' subdomains'], 'Color', 'w');
 grid on;
-ylim([0 max(results_iter1)+5]); % Ajuste l'échelle
-set(gca, 'XDir', 'reverse'); % On inverse l'axe X pour voir h/H diminuer vers la droite (raffinement)
-set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]); % axes en blanc, grille légèrement grise
+ylim([0 max(results_iter1)+5]);
+set(gca, 'XDir', 'reverse'); % reverse X to show refinement to the right
+set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]);
 
-% Sous-graphe 2 : Cas Démonstration
+% Subplot 2: Demonstration case
 subplot(1, 2, 2);
 semilogx(results_h_H2, results_iter2, '-ro', 'LineWidth', 2, 'MarkerFaceColor', 'r');
-xlabel('h / H (Finesse relative)', 'Color', 'w');
-ylabel('Nombre d''itérations', 'Color', 'w');
-title(['Cas Démonstration : N = ', num2str(L/H2), ' sous-domaines'], 'Color', 'w');
+xlabel('h / H (Relative mesh size)', 'Color', 'w');
+ylabel('Number of iterations', 'Color', 'w');
+title(['Demonstration Case: N = ', num2str(L/H2), ' subdomains'], 'Color', 'w');
 grid on;
 set(gca, 'XDir', 'reverse');
-set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]); % axes en blanc, grille légèrement grise
+set(gca, 'XColor', 'w', 'YColor', 'w', 'GridColor', [0.6 0.6 0.6]);
 
 % Assurer que le fond de la figure est sombre pour contraste (si souhaité)
 set(gcf, 'Color', 'k');
