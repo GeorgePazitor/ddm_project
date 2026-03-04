@@ -176,3 +176,5 @@ ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / mu
 
 ub
 
+plot_displacement_2_9;
+
