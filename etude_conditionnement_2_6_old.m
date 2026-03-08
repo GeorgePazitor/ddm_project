@@ -80,12 +80,12 @@ for n = n_values
     fprintf('%-10d %-10.4f %-15.4f\n', n, h/H, c);
 end
 
-% --- Tracé ---
-figure('Name', 'Conditionnement Préconditionné', 'Color', 'black');
+% --- Plot ---
+figure('Name', 'Preconditioned Conditioning', 'Color', 'black');
 semilogx(results_h_H, results_cond_Prec, '-go', 'LineWidth', 2);
-xlabel('h / H (Finesse relative)', 'Color', 'w');
-ylabel('Conditionnement k(tilde{S}_p^{-1} S_p)', 'Color', 'w');
-title('Question 2.6 : Scalabilité du Conditionnement brut (O(1))');
+xlabel('h / H (Relative fine)', 'Color', 'w');
+ylabel('Condition number k(\\tilde{S}_p^{-1} S_p)', 'Color', 'w');
+title('Question 2.6: Scalability of Preconditioned Conditioning (O(1))');
 grid on;
-set(gca, 'XDir', 'reverse'); % Axe inversé pour montrer le raffinement vers la droite
+set(gca, 'XDir', 'reverse'); % Reverse axis to show refinement to the right
 ylim([0 max(results_cond_Prec)*1.2]);

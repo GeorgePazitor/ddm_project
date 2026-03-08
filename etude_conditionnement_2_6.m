@@ -79,12 +79,12 @@ for n = n_values
     fprintf('%-10d %-10.4f %-15.4f\n', n, h/H, c);
 end
 
-% --- Tracé ---
-figure('Name', 'Conditionnement normalisé Preconditionne', 'Color', 'black');
+% --- Plot ---
+figure('Name', 'Normalized Preconditioner Conditioning', 'Color', 'black');
 semilogx(results_h_H, results_cond_Prec, '-go', 'LineWidth', 2);
-xlabel('h / H (Finesse relative)', 'Color', 'w');
-ylabel('Conditionnement k(tilde{S}_p^{-1} S_p)', 'Color', 'w'); % Notation simplifiée pour éviter l'erreur
-title('Question 2.6 : Scalabilité du Conditionnement (O(1) normalisé)', 'Color', 'w');
+xlabel('h / H (Relative finesse)', 'Color', 'w');
+ylabel('Condition number k(\tilde{S}_p^{-1} S_p)', 'Color', 'w');
+title('Question 2.6: Scalability of Conditioning (O(1) normalized)', 'Color', 'w');
 grid on;
 set(gca, 'XDir', 'reverse');
 ylim([0 max(results_cond_Prec)*1.5]);

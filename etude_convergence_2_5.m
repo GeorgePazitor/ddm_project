@@ -54,24 +54,24 @@ end
 
 figure('Name', 'Etude de Scalabilité BDD (h)', 'Color', 'black');
 
-% Sous-graphe 1 : Cas de l'exercice
+% Subplot 1: Exercise case
 subplot(1, 2, 1);
 semilogx(results_h_H1, results_iter1, '-bo', 'LineWidth', 2, 'MarkerFaceColor', 'b');
-xlabel('h / H (Finesse relative)','Color','w');
-ylabel('Nombre d''itérations','Color','w');
-title(['Cas Exercice : N = ', num2str(L/H1), ' (BDD)'],'Color','w');
+xlabel('h / H (relative mesh size)','Color','w');
+ylabel('Number of iterations','Color','w');
+title(['Exercise case: N = ', num2str(L/H1), ' (BDD)'],'Color','w');
 grid on;
-ylim([0 max([results_iter1, results_iter2])+2]); % Mêmes échelles Y pour comparer
-set(gca, 'XDir', 'reverse'); 
+ylim([0 max([results_iter1, results_iter2])+2]); % Same Y-scale for comparison
+set(gca, 'XDir', 'reverse');
 
-% Sous-graphe 2 : Cas Démonstration
+% Subplot 2: Demonstration case
 subplot(1, 2, 2);
 semilogx(results_h_H2, results_iter2, '-ro', 'LineWidth', 2, 'MarkerFaceColor', 'r');
-xlabel('h / H (Finesse relative)','Color','w');
-ylabel('Nombre d''itérations','Color','w');
-title(['Cas Démonstration : N = ', num2str(L/H2), ' (BDD)'],'Color','w');
+xlabel('h / H (relative mesh size)','Color','w');
+ylabel('Number of iterations','Color','w');
+title(['Demonstration case: N = ', num2str(L/H2), ' (BDD)'],'Color','w');
 grid on;
-ylim([0 max([results_iter1, results_iter2])+2]); 
+ylim([0 max([results_iter1, results_iter2])+2]);
 set(gca, 'XDir', 'reverse');
 
 sgtitle('Question 2.5 : Scalabilité en h (Méthode BDD)');

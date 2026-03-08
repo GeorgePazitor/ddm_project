@@ -31,14 +31,14 @@ for N = N_values
     fprintf('%-10d %-10.4f %-15d\n', N, H, k);
 end
 
-% --- Tracé du graphique ---
-figure('Name', 'N-Scalabilité Primal Schur', 'Color', 'black');
+% --- Plot ---
+figure('Name', 'N-Scalability Primal Schur', 'Color', 'black');
 
 plot(N_values, results_iter, '-s', 'LineWidth', 2, 'MarkerFaceColor', 'r', 'Color', 'r');
 
-xlabel('Nombre de sous-domaines (N)', 'FontSize', 12, 'FontWeight', 'bold','Color','w');
-ylabel('Nombre d''itérations pour converger', 'FontSize', 12, 'FontWeight', 'bold','Color','w');
-title({'Scalabilité par rapport au nombre de sous-domaines', '(Primal Schur sans préconditionneur)'}, 'FontSize', 14, 'Color','w');
+xlabel('Number of subdomains (N)', 'FontSize', 12, 'FontWeight', 'bold', 'Color', 'w');
+ylabel('Number of iterations to converge', 'FontSize', 12, 'FontWeight', 'bold', 'Color', 'w');
+title({'Scalability versus number of subdomains', '(Primal Schur without preconditioner)'}, 'FontSize', 14, 'Color', 'w');
 grid on;
 
 % Ajout d'une annotation pour l'interprétation
