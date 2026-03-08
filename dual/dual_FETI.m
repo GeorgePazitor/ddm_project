@@ -104,7 +104,7 @@ M_diam = blkdiag(I{:}); % 1d bar: n elements -> n+1 dofs same as M
 
 Ab_tild  = (Ab_diam * inv(M_diam) * Ab_diam')' *  Ab_diam * inv(M_diam) ;
 
-Sd_tild = Ab_tild * Sp_diam * Ab_tild';
+Sd_tild = Ab_tild * Sp_diam * Ab_tild'; % Sd tilde ^-1
 
 Sd = Ab_diam * Sd_diam * Ab_diam';
 

@@ -9,7 +9,7 @@ Fd = 10;   % (10) force in newton
 E = 2e5;   % (2e5)young's module in MPa
 
 H = 1000;    % (10) H = lenght of a substructure (must be a divisor of L)
-h = 10;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
+h = 100;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
@@ -49,7 +49,10 @@ end
 
 Rb_l = cell(1,N);
 for s = 1:N
-    Rb_l{s} = null(Sp_l{s}, 1e-6); % normalized version of the rigid body modes     
+    Rb_l{s} = null(Sp_l{s}, 1e-6); % normalized version of the rigid body modes   
+    Rb = Rb_l{s} ;
+    Rb
+    Sd_l{s}
 end
 
 %% assemble all the necessary operatiors 
@@ -87,7 +90,7 @@ G_tilde = A_tild * Rb_diam;
 %% conjugate gradient with preconditioner without BDD projector
 %initialization 
 
-m=3*N;
+m=4*N;
 epsilon = 1e-10;
 beta_i = cell(1,m);
 p = cell(1,m);
@@ -109,6 +112,7 @@ if r0_norm > epsilon
 
     for i=1:m 
         i;
+        d{i}
         p{i} = Sp*d{i};
     
         alpha_i = (ri'*d{i}) / (d{i}'*p{i});  %compute the optimal step
@@ -136,6 +140,7 @@ if r0_norm > epsilon
     end
 end
 ub = ui;
+N
 i
 ub;
 

@@ -3,7 +3,7 @@ close all
 clc
 addpath('utils')
 %% initialisation of parameters
-L = 100000;   % (30) in mm
+L = 10000;   % (30) in mm
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
@@ -77,7 +77,7 @@ M_diam  = blkdiag(I{:}); % 1d bar: n elements -> n+1 dofs
 
 A_tild  = (A_diam * M_diam * A_diam') \ A_diam * M_diam;
 
-Sp_tild = A_tild * Sd_diam * A_tild';
+Sp_tild = A_tild * Sd_diam * A_tild'; % Sp tilde ^-1
 
 Sp = A_diam * Sp_diam * A_diam';
 

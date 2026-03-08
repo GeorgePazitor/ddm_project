@@ -1,5 +1,5 @@
 clear all; clc; close all;
-
+addpath("utils")
 % --- Paramètres fixes ---
 L = 30; 
 S = 1; 
