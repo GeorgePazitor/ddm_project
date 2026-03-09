@@ -3,7 +3,7 @@ close all
 clc
 addpath('utils')
 %% initialisation of parameters
-L = 100000;   % (30) in mm
+L = 10000;   % (30) in mm
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
@@ -47,7 +47,7 @@ for s = 1:N
     Sp_l{s};
     % null or eig always return a normalized vector 
     % null computes the kernel of the Sp(s) matrix -> rigid.b modes of s
-    Rb_l{s} = null(Sp_l{s}, 'rational'); % not normalized rigid body modes 
+    Rb_l{s} = null(Sp_l{s}, 1e-6); % not normalized rigid body modes 
     s;
     Rb_s = Rb_l{s};
     Rb_s;
@@ -57,7 +57,7 @@ end
 
 Sd_l = cell(1, N);
 for s=1:N
-    Sd_l{s} = pinv(Sp_l{s}); 
+    Sd_l{s} = pinv(Sp_l{s});% to test get the anomaly on displacement use tol = 1e-6 
 end
 
 Sd_diam = blkdiag(Sd_l{:});
@@ -110,7 +110,7 @@ Ab_tild  = (Ab_diam * inv(M_diam) * Ab_diam')' *  Ab_diam * inv(M_diam) ;
 %% Preconditioned conjugate gradient with Neumann preconditioner 
 %initialization 
 
-m=100;
+m=3*N;
 epsilon = 1e-10;
 
 beta_i = cell(1,m);
@@ -125,8 +125,8 @@ tmp_l = cell(1,N);
 lambda_l = cell(1, N);
 
 Q = eye(size(G,1));
-P = eye(size(Q)) - Q * G * inv(G' * Q * G) * G';
-lambda_i = - Q * G * inv(G' * Q * G) * e_diam;
+P = eye(size(Q)) - Q * G * ((G' * Q * G) \ G');
+lambda_i = - Q * G * ((G' * Q * G) \ e_diam);
 
 % Distribute initialization of lambda to
 % solve the local Neumann problem
@@ -153,7 +153,7 @@ tmp_diam = cat(1, tmp_l{:});
 zi = P'* (Ab_tild*tmp_diam); %apply the projector to search on the good search space 
 
 d{1}=zi;   %initialize the search direction
-
+residuals = zeros(1,m);
 r0_norm = norm(ri);
 if norm(ri)/r0_norm > epsilon 
     for i=1:m
@@ -199,6 +199,7 @@ if norm(ri)/r0_norm > epsilon
     
         d{i+1} = zi + update; %update the search direction
     
+        residuals(i) = norm(ri)/r0_norm;
         %%%------------
         if norm(ri)/r0_norm < epsilon 
             break;
@@ -208,11 +209,24 @@ if norm(ri)/r0_norm > epsilon
     
 end
 
-%post processing - TODO, distribute the process 
-alpha_diam = (G' * Q * G ) \ G' * Q * (- bd -  Sd * lambda_i );
+%post processing
+
+% 1. Amplitudes des modes rigides (alpha)
+alpha_diam = (G' * Q * G ) \ (G' * Q * (- bd -  Sd * lambda_i));
+
+% 2. Déplacements totaux désassemblés aux interfaces
 ub_diam = Sd_diam * (bp_diam + Ab_diam' * lambda_i) + Rb_diam * alpha_diam;
 
-ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
+% 3. Déplacements globaux aux interfaces (Moyenne)
+ub = 1/2 * A_diam * ub_diam;
+
 ub
 
+figure(1)
 
+plot(1:m, residuals, Color="red");
+xlabel("Iteration i");
+ylabel("norm_ri / norm_r0");
+title("relative residual");
+
+plot_displacement_2_9

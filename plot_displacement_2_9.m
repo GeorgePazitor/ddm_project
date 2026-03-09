@@ -1,13 +1,5 @@
 %% --- POST-TRAITEMENT : Question 2.9 ---
 
-% 1. Amplitudes des modes rigides (alpha)
-alpha_diam = (G' * Q * G ) \ (G' * Q * (- bd -  Sd * lambda_i));
-
-% 2. Déplacements totaux désassemblés aux interfaces
-ub_diam = Sd_diam * (bp_diam + Ab_diam' * lambda_i) + Rb_diam * alpha_diam;
-
-% 3. Déplacements globaux aux interfaces (Moyenne)
-ub = 1/2 * A_diam * ub_diam; 
 ub_l = vert_diam_to_s(A_diam'*ub, N); % On les remet sous forme de liste par sous-domaine
 
 % 4. Calcul des noeuds internes et assemblage pour le tracé

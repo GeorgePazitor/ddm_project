@@ -8,8 +8,8 @@ S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
 
-H = 1000;    % (10) H = lenght of a substructure (must be a divisor of L)
-h = 10;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
+H = 10000;    % (10) H = lenght of a substructure (must be a divisor of L)
+h = 1000;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
@@ -54,22 +54,17 @@ for s = 1:N
     Sp_l{s};
     % null or eig always return a normalized vector 
     % null computes the kernel of the Sp(s) matrix -> rigid.b modes of s
-    Rb_l{s} = null(Sp_l{s}, 'rational'); % not normalized rigid body modes 
+    Rb_l{s} = null(Sp_l{s}, 1e-6); % not normalized rigid body modes 
     s;
     Rb_s = Rb_l{s};
     Rb_s;
 end
 
-
-% solution of primal shur complement with direct method
-%ub = Sp\bp
-%ub_diam=A_diam'*ub;
-
 %% computing Sd
 
 Sd_l = cell(1, N);
 for s=1:N
-    Sd_l{s} = pinv(Sp_l{s}); 
+    Sd_l{s} = pinv(Sp_l{s},  1e-6); 
 end
 
 Sd_diam = blkdiag(Sd_l{:});
@@ -102,30 +97,10 @@ ub_diam = Sd_diam * (bp_diam + lamb_diam) + Rb_diam * alphab_diam;
 
 ub_diam;
 
-ub = 1/2 * A_diam * ub_diam; % 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
+ub = 1/2 * A_diam * ub_diam;
+% 1/multiplicity comes from A_diam*A_diam' = 1 / multiplicity* I (identity)
 
 ub
 
-%% compute ui from ub 
-%{
-ub_l=vert_diam_to_s(ub_diam, N);
 
-ui_l = cell(1:N);
-for s=1:N
-    if s == 1        
-        Kii = K_l{s}(i_list{s}(2:end), i_list{s}(2:end));
-        Kib = K_l{s}(i_list{s}(2:end), b_list{s});
-        fi = f_l{s}(i_list{s}(2:end));
 
-        ui_l{s} = inv(Kii)*(fi-Kib*ub_l{s});
-
-    else
-        Kii = K_l{s}(i_list{s}, i_list{s});
-        Kib = K_l{s}(i_list{s}, b_list{s});
-        fi = f_l{s}(i_list{s});
-
-        ui_l{s} = inv(Kii)*(fi-Kib*ub_l{s});
-    end
-    %ui_l{s};
-end
-%}

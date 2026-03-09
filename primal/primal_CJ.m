@@ -3,22 +3,19 @@ close all
 clc
 addpath('utils');
 %% initialisation of parameters
-L = 1000;   % (30) in mm
+L = 100000;   % (30) in mm
 S = 1;     % (1)  mm^2
 Fd = 10;   % (10) force in newton 
 E = 2e5;   % (2e5)young's module in MPa
 
-H = 100;    % (10) H = lenght of a substructure (must be a divisor of L)
+H = 1000;    % (10) H = lenght of a substructure (must be a divisor of L)
 h = 10;     % (5)  h = lenght of an element inside a single substructure (must be a divisor of H)
 
 n = H/h; % number of element per substructure
 N = L/H; % number of substructures 
 %% build assebly operators A and A bar
-
 A_diam = A_op(N);
-
 Ab_diam = A_bar_op(N);
-
 %% FEM for each substructure
 node = [1:n        % matrix of n column vectors, each of which 
         2:n+1];    % corresponds to an element and its constitutive nodes  

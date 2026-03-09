@@ -140,8 +140,8 @@ if r0_norm > epsilon
     end
 end
 ub = ui;
-N
-i
+N;
+i;
 ub;
 
 plot(1:m, residuals, Color="red");
